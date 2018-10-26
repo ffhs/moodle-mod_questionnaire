@@ -39,6 +39,7 @@ if ($ADMIN->fulltree) {
         'institution' => get_string('institution'),
         'department' => get_string('department'),
         'course' => get_string('course'),
+        'questionnairename' => get_string('questionnairename', 'questionnaire'),
         'group' => get_string('group'),
         'id' => get_string('id', 'questionnaire'),
         'fullname' => get_string('fullname'),
