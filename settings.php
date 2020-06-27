@@ -47,7 +47,8 @@ if ($ADMIN->fulltree) {
     // New downloadoptions can be added to the end of this array.
     $additionalchoices = array(
         'userid' => get_string('userid', 'grades'),
-        'modulename' => get_string('modulename', 'questionnaire')
+        'modulename' => get_string('modulename', 'questionnaire'),
+        'participants' => get_string('participants', 'scormreport_graphs')
     );
     $choices = array_merge($defaultchoices, $additionalchoices);
 
