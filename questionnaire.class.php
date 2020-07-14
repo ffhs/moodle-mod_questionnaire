@@ -2925,9 +2925,10 @@ class questionnaire {
         if (!$this->survey_is_public()) {
             $courseid = $this->course->id;
             $coursename = $this->course->fullname;
+            $modulename = $this->name;
         } else {
             // For a public questionnaire, look for the course that used it.
-            $sql = 'SELECT q.id, q.course, c.fullname ' .
+            $sql = 'SELECT q.id, q.course, q.name, c.fullname ' .
                    'FROM {questionnaire_response} qr ' .
                    'INNER JOIN {questionnaire} q ON qr.questionnaireid = q.id ' .
                    'INNER JOIN {course} c ON q.course = c.id ' .
@@ -2935,9 +2936,11 @@ class questionnaire {
             if ($record = $DB->get_record_sql($sql, [$resprow->rid, 'y'])) {
                 $courseid = $record->course;
                 $coursename = $record->fullname;
+                $modulename = $record->name;
             } else {
                 $courseid = $this->course->id;
                 $coursename = $this->course->fullname;
+                $modulename = $this->name;
             }
         }
 
@@ -3004,6 +3007,28 @@ class questionnaire {
         if (in_array('username', $options)) {
             array_push($positioned, $username);
         }
+        if (in_array('modulename', $options)) {
+            array_push($positioned, $modulename);
+        }
+        if (in_array('participants', $options)) {
+            // Get courseid for given coursename.
+            $sql = 'SELECT * FROM {course} WHERE fullname = :coursename';
+            $params = ['coursename' => $coursename];
+            $course = $DB->get_record_sql($sql, $params);
+
+            // Get all enrolled students in this course.
+            $sql = 'SELECT count(u.id)
+                FROM {user} u
+                    LEFT JOIN {role_assignments} ra ON ra.userid = u.id
+                    LEFT JOIN {context} ctx ON ctx.id = ra.contextid
+                    LEFT JOIN {course} c ON c.id = ctx.instanceid
+                    LEFT JOIN {role} r ON r.id = ra.roleid
+                WHERE r.id = :roleid
+                AND c.id = :courseid';
+            $params = ['roleid' => 5, 'courseid' => $course->id];
+            $participantsincourse = $DB->count_records_sql($sql, $params);
+            array_push($positioned, $participantsincourse);
+        }
         if (in_array('complete', $options)) {
             array_push($positioned, $resprow->complete);
         }
@@ -3046,8 +3071,11 @@ class questionnaire {
         $columns = array();
         $types = array();
         foreach ($options as $option) {
-            if (in_array($option, array('response', 'submitted', 'id'))) {
+            if (in_array($option, array('response', 'submitted', 'id', 'modulename'))) {
                 $columns[] = get_string($option, 'questionnaire');
+                $types[] = 0;
+            } else if (in_array($option, array('participants'))) {
+                $columns[] = get_string($option, 'scormreport_graphs');
                 $types[] = 0;
             } else {
                 $columns[] = get_string($option);
